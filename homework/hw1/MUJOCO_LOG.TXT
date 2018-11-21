@@ -1,0 +1,9 @@
+Mon Oct 15 18:06:46 2018
+ERROR: Could not open activation key file /home/local/USHERBROOKE/judt3001/.mujoco/mjkey.txt
+
+Mon Oct 15 18:07:43 2018
+ERROR: GLEW initalization error: Missing GL version
+
+Mon Oct 15 18:09:53 2018
+ERROR: GLEW initalization error: Missing GL version
+
