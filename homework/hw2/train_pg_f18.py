@@ -274,7 +274,6 @@ class Agent(object):
         # neural network baseline. These will be used to fit the neural network baseline. 
         #========================================================================================#
         if self.nn_baseline:
-            raise NotImplementedError
             self.baseline_prediction = tf.squeeze(build_mlp(
                                     self.sy_ob_no, 
                                     1, 
@@ -282,9 +281,9 @@ class Agent(object):
                                     n_layers=self.n_layers,
                                     size=self.size))
             # YOUR_CODE_HERE
-            self.sy_target_n = None
-            baseline_loss = None
-            self.baseline_update_op = tf.train.AdamOptimizer(self.learning_rate).minimize(baseline_loss)
+            self.sy_target_n = tf.placeholder(shape=[None,], name='target', dtype=tf.float32)
+            self.baseline_loss = tf.nn.l2_loss(self.baseline_prediction - self.sy_target_n)
+            self.baseline_update_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.baseline_loss)
 
     def sample_trajectories(self, itr, env):
         # Collect paths until we have enough timesteps
@@ -442,8 +441,8 @@ class Agent(object):
             # Hint #bl1: rescale the output from the nn_baseline to match the statistics
             # (mean and std) of the current batch of Q-values. (Goes with Hint
             # #bl2 in Agent.update_parameters.
-            raise NotImplementedError
-            b_n = None # YOUR CODE HERE
+            b_n = self.sess.run(self.baseline_prediction, feed_dict={self.sy_ob_no: ob_no})
+            b_n = (b_n - np.mean(q_n) / np.std(q_n))
             adv_n = q_n - b_n
         else:
             adv_n = q_n.copy()
@@ -514,8 +513,10 @@ class Agent(object):
             # Agent.compute_advantage.)
 
             # YOUR_CODE_HERE
-            raise NotImplementedError
-            target_n = None
+            target_n = (q_n - np.mean(q_n) / np.std(q_n))
+            _, baseline_loss = self.sess.run([self.baseline_update_op, self.baseline_loss],
+                                        feed_dict={self.sy_target_n: target_n,
+                                                   self.sy_ob_no: ob_no})
 
         #====================================================================================#
         #                           ----------PROBLEM 3----------
@@ -678,7 +679,6 @@ def main():
     max_path_length = args.ep_len if args.ep_len > 0 else None
 
     processes = []
-    print("Start")
     seed = args.seed
     train_PG(
             exp_name=args.exp_name,
@@ -697,6 +697,8 @@ def main():
             n_layers=args.n_layers,
             size=args.size
             )
+
+    # TODO FIX pickle multiprocessing error
 
     # for e in range(args.n_experiments):
     #     seed = args.seed + 10*e
